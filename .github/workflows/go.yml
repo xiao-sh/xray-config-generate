@@ -13,23 +13,30 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - goos: linux
             goarch: amd64
+
           - goos: linux
             goarch: arm64
+
           - goos: darwin
             goarch: amd64
+
           - goos: darwin
             goarch: arm64
+
           - goos: windows
             goarch: amd64
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: '1.25'
 
@@ -47,4 +54,35 @@ jobs:
           CGO_ENABLED=0 \
           go build \
           -ldflags="-s -w" \
-          -o dist/myapp-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}
+          -o dist/myapp-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} \
+          .
+
+      - name: Show files
+        run: ls -lah dist
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myapp-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Show downloaded files
+        run: |
+          echo "===== Files ====="
+          find dist -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
+          generate_release_notes: true
