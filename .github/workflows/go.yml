@@ -1,44 +1,40 @@
-name: Release
+# .github/workflows/build.yml
+
+name: Build
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        include:
-          - os: linux
-            arch: amd64
-          - os: linux
-            arch: arm64
-          - os: darwin
-            arch: amd64
-          - os: darwin
-            arch: arm64
-          - os: windows
-            arch: amd64
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: '1.25'
 
-      - run: |
-          mkdir -p dist
-          EXT=""
-          if [ "${{ matrix.os }}" = "windows" ]; then
-            EXT=".exe"
-          fi
+      - name: Build Linux
+        run: |
+          mkdir dist
+          GOOS=linux GOARCH=amd64 go build -o dist/myapp-linux-amd64 .
 
-          GOOS=${{ matrix.os }} \
-          GOARCH=${{ matrix.arch }} \
-          CGO_ENABLED=0 \
-          go build \
-            -o dist/myapp-${{ matrix.os }}-${{ matrix.arch }}${EXT}
+      - name: Build Mac
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -o dist/myapp-darwin-arm64 .
+
+      - name: Build Windows
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o dist/myapp-windows-amd64.exe .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist/*
