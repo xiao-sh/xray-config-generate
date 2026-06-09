@@ -8,3 +8,6 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/xiao-sh/xray-config-gene
 - **一定要在自己服务器上运行**
 - **生成的脚本在当前目录下，名称为config_simple.json**
 - **生成完配置自行替换，重起程序，让配置生效**
+
+## xray安装
+- [Xray-core](https://github.com/XTLS/Xray-core)
